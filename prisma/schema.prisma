@@ -172,6 +172,174 @@ enum NewsletterStatus {
   SENT
 }
 
+// ---------------------------------------------------------------------------
+// Training tracker (/train) — single-user, admin-gated. No userId on purpose:
+// every row belongs to the site owner.
+// ---------------------------------------------------------------------------
+
+// Canonical movement library. One row per movement so a front squat trends the
+// same whether it came from the Hyrox plan or a CrossFit WOD.
+model Movement {
+  id          String           @id @default(uuid())
+  createdAt   DateTime         @default(now())
+  name        String           @unique
+  category    MovementCategory @default(OTHER)
+  // UI hint only — decides which inputs the logger shows first. Any set may
+  // still carry any combination of weight/reps/distance/time.
+  unitType    UnitType         @default(WEIGHT_REPS)
+  defaultUnit WeightUnit       @default(LB)
+  loggedMovements LoggedMovement[]
+}
+
+enum MovementCategory {
+  BARBELL
+  DUMBBELL
+  MACHINE
+  GYMNASTIC
+  STATION
+  CARRY
+  CORE
+  OTHER
+}
+
+enum UnitType {
+  WEIGHT_REPS
+  DISTANCE_TIME
+  REPS
+  DURATION
+}
+
+enum WeightUnit {
+  LB
+  KG
+}
+
+// A prescription for a given calendar day: a seeded Hyrox plan day or a
+// fetched/pasted CrossFit WOD. Logging is never assumed from this — a row
+// here is an offer, not a commitment.
+model PlannedSession {
+  id        String        @id @default(uuid())
+  createdAt DateTime      @default(now())
+  date      DateTime      @db.Date
+  world     TrainingWorld
+  title     String
+  source    PlannedSource
+  rawText   String? // original prescription text (doc export / API text / paste)
+  blocks    Json? // structured blocks powering planned-vs-actual
+  // External id (PushPress workout uid) so re-fetching a WOD upserts instead
+  // of duplicating — same idea as Event's @@unique([sourceType, sourceId]).
+  sourceId  String?       @unique
+  loggedSessions LoggedSession[]
+
+  @@index([date])
+}
+
+enum TrainingWorld {
+  HYROX
+  CROSSFIT
+}
+
+enum PlannedSource {
+  AUTHORED // seeded from the Hyrox plan doc
+  PUSHPRESS // fetched from the PushPress Train API
+  MANUAL // pasted by hand
+}
+
+// One thing actually done. Multiple per day is normal (easy run + climbing).
+model LoggedSession {
+  id               String          @id @default(uuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  date             DateTime        @db.Date
+  activityType     ActivityType
+  plannedSessionId String?
+  plannedSession   PlannedSession? @relation(fields: [plannedSessionId], references: [id], onDelete: SetNull)
+  rpe              Int? // effort 1-10
+  felt             Int? // how it felt 1-10
+  durationMin      Int?
+  score            String? // WOD result: "21:34", "5 rds + 12", load, etc.
+  scoreType        String? // FOR_TIME / AMRAP / ... (from PushPress when available)
+  notes            String?
+  // Per-plan-block logging, keyed by block index:
+  // { "0": { done, timeSec?, rounds?, reps?, note? }, ... }
+  blockResults     Json?
+  movements        LoggedMovement[]
+  garminActivity   GarminActivity?
+
+  @@index([date])
+  @@index([activityType, date])
+}
+
+enum ActivityType {
+  HYROX
+  CROSSFIT
+  RUN
+  YOGA
+  CLIMBING
+}
+
+// A movement performed within a session. Sets live in JSON because Hyrox
+// stations mix weight+distance+time in a single set and a rigid sets table
+// buys nothing for a single user.
+// Shape: [{ weight?, unit?: "LB"|"KG", reps?, distanceM?, timeSec? }]
+model LoggedMovement {
+  id              String        @id @default(uuid())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  loggedSessionId String
+  loggedSession   LoggedSession @relation(fields: [loggedSessionId], references: [id], onDelete: Cascade)
+  movementId      String
+  movement        Movement      @relation(fields: [movementId], references: [id])
+  order           Int           @default(0)
+  sets            Json          @default("[]")
+  notes           String?
+
+  // Powers per-movement trends and the last-used-weight pre-fill.
+  @@index([movementId, createdAt])
+  @@index([loggedSessionId])
+}
+
+// Garmin activities, imported by the daily cron (/api/cron/sync-garmin) or
+// the manual sync button. Runs auto-create a linked RUN LoggedSession.
+model GarminActivity {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  garminId        String   @unique
+  date            DateTime @db.Date
+  type            String
+  name            String?
+  avgHr           Int?
+  maxHr           Int?
+  distanceM       Float?
+  durationSec     Int?
+  avgPaceSecPerKm Float?
+  raw             Json?
+  loggedSessionId String?  @unique
+  loggedSession   LoggedSession? @relation(fields: [loggedSessionId], references: [id], onDelete: SetNull)
+  // Set when the auto-created session is deleted in-app, so the nightly sync
+  // doesn't resurrect it forever.
+  dismissed       Boolean  @default(false)
+
+  @@index([date])
+}
+
+// One row per night, pulled silently by the Garmin sync. Collection starts
+// before any UI exists because readiness baselines need ~3 weeks of history.
+model DailyWellness {
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  date              DateTime @unique @db.Date
+  hrvMs             Float? // avgOvernightHrv
+  hrvStatus         String?
+  restingHr         Int?
+  rhr7dAvg          Int?
+  sleepSec          Int?
+  sleepScore        Int?
+  bodyBatteryChange Int?
+  avgSleepStress    Float?
+  respirationAvg    Float?
+}
+
 // Reserved for a future reading-list feature. Not wired to any route, query,
 // or server action yet — safe to build on or drop.
 model Book {

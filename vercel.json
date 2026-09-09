@@ -8,12 +8,19 @@
     },
     "app/api/cron/sync-events/route.ts": {
       "maxDuration": 180
+    },
+    "app/api/cron/sync-garmin/route.ts": {
+      "maxDuration": 60
     }
   },
   "crons": [
     {
       "path": "/api/cron/sync-events",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/sync-garmin",
+      "schedule": "0 2 * * *"
     }
   ]
 }

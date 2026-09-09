@@ -6,9 +6,17 @@ const isAuthenticatedRoute = createRouteMatcher([
   "/admin/(.*)",
   "/profile",
   "/settings",
+  "/train",
+  "/train/(.*)",
 ]);
 
-const isAdminRoute = createRouteMatcher(["/admin", "/admin/(.*)"]);
+// /train is the owner's personal training tracker — admin-gated like /admin.
+const isAdminRoute = createRouteMatcher([
+  "/admin",
+  "/admin/(.*)",
+  "/train",
+  "/train/(.*)",
+]);
 
 const isPublicRoute = createRouteMatcher(["/"]);
 

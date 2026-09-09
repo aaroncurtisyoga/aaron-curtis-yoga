@@ -222,6 +222,9 @@ img {
   --color-cobalt: #2749e0;
   --color-cobalt-bright: #5c7cff;
   --color-band: #eef1fa;
+  /* Bright screen accent. Used by /train for CTAs, focus rings and
+     highlights on its dark surfaces. */
+  --color-cta: #1a73e8;
 }
 
 :root {
