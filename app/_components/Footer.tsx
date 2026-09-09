@@ -52,7 +52,7 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 data-testid={link.testId}
                 aria-label={link.ariaLabel}
-                className="text-[15px] font-medium lowercase text-white transition-colors hover:text-cobalt-bright"
+                className="text-[15px] font-medium lowercase text-white transition-colors hover:text-sky"
                 onClick={() => {
                   track("social_media", {
                     action: link.trackAction,
@@ -67,7 +67,7 @@ const Footer = () => {
               href="mailto:hi@aaroncurtisyoga.com"
               data-testid="footer-email-link"
               aria-label="Email Aaron"
-              className="text-[15px] font-medium lowercase text-white transition-colors hover:text-cobalt-bright"
+              className="text-[15px] font-medium lowercase text-white transition-colors hover:text-sky"
             >
               email
             </a>

@@ -42,7 +42,7 @@ const CheckoutButton: FC<CheckoutProps> = ({ event, userId }) => {
 
   return (
     <form onSubmit={(e) => onCheckout(e)} method="post">
-      <Button type="submit" className="w-full">
+      <Button variant="accent" type="submit" className="w-full">
         {event.isFree ? "Get Ticket" : "Buy Ticket"}
       </Button>
     </form>

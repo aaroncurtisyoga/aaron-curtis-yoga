@@ -51,7 +51,7 @@ npx playwright test      # E2E tests
 ### shadcn/ui (not HeroUI — migrated)
 
 - Import from `@/components/ui/*` (button, card, dialog, table, input, etc.)
-- Google-inspired primary blue `#0842a0` (`--primary` in `app/globals.css`)
+- Two-blue system in `app/globals.css`: deep royal anchor `#0842a0` (`--primary`/`--ring` — brand, print/apparel, headings, text & links on white) + bright screen accent `#1a73e8` (`--color-cta`, exposed as `bg-cta`/`text-cta`) for primary CTAs, hovers, highlights only. Use the `accent` Button variant for conversion CTAs; most buttons stay the deep `default`. `--color-sky` #6ba3f5 is the light accent tint for text on dark (navy) surfaces. Keep bright `#1a73e8` off physical/print output.
 - Fonts: Roboto Flex (sans) + Merriweather (serif)
 
 ### Newsletter (Resend)

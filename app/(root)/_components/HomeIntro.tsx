@@ -23,7 +23,7 @@ export default function HomeIntro() {
           Hey ~ I&rsquo;m Aaron. I teach yoga around DC &mdash; sunrise flows,
           power-leaning vinyasa, and lately a lot of sound: handpan, bowls, and
           live sound baths.{" "}
-          <span className="bg-gradient-to-t from-[#c9d4ff] from-[38%] to-transparent to-[38%] font-semibold">
+          <span className="bg-gradient-to-t from-[#c3daf9] from-[38%] to-transparent to-[38%] font-semibold">
             Space to move, breathe, connect.
           </span>
         </p>

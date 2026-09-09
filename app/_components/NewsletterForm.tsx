@@ -80,6 +80,7 @@ const NewsletterForm = () => {
         </div>
         <Button
           type="submit"
+          variant="accent"
           disabled={isSubmitting}
           className="h-12 rounded-[4px] px-8 font-display text-base font-normal uppercase tracking-[0.08em]"
         >

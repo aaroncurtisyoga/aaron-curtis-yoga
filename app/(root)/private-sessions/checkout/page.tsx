@@ -91,7 +91,7 @@ const CheckoutPage: React.FC = () => {
   const appearance = {
     theme: "stripe" as const,
     variables: {
-      colorPrimary: "#0066cc",
+      colorPrimary: "#0842a0",
     },
   };
 

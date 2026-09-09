@@ -11,6 +11,10 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        // Bright screen accent for primary conversion CTAs (sign up, register,
+        // pay). Reserve for real CTAs — most buttons stay the deep `default`.
+        // Darken on hover (not opacity) so the white label keeps its contrast.
+        accent: "bg-cta text-white shadow hover:brightness-90",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:

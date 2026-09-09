@@ -38,7 +38,7 @@ const Checkout: FC<ICheckoutButtonProps> = ({ event }) => {
         {event.isFree ? "Free" : `$${event.price}`}
       </p>
       {event.isExternal && event.externalUrl ? (
-        <Button className="w-full" asChild>
+        <Button variant="accent" className="w-full" asChild>
           <a href={event.externalUrl} target="_blank" rel="noopener noreferrer">
             Register at Bright Bear
           </a>
@@ -47,7 +47,7 @@ const Checkout: FC<ICheckoutButtonProps> = ({ event }) => {
         <>
           <SignedOut>
             <SignInButton>
-              <Button type="button" className="w-full">
+              <Button variant="accent" type="button" className="w-full">
                 Sign In to Purchase
               </Button>
             </SignInButton>

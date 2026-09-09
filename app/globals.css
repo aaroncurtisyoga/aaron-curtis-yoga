@@ -100,7 +100,7 @@ img {
 
   .header-link::after {
     content: "";
-    @apply absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 ease-out;
+    @apply absolute -bottom-1 left-0 w-0 h-0.5 bg-cta transition-all duration-300 ease-out;
   }
 
   .header-link:hover::after {
@@ -217,14 +217,12 @@ img {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Brand — Practice Notes design system */
-  --color-navy: #131826;
-  --color-cobalt: #2749e0;
-  --color-cobalt-bright: #5c7cff;
-  --color-band: #eef1fa;
-  /* Bright screen accent. Used by /train for CTAs, focus rings and
-     highlights on its dark surfaces. */
-  --color-cta: #1a73e8;
+  /* Brand — blue system: deep anchor (--primary) + bright screen accent (--color-cta).
+     Anchor #0842a0 is the print/apparel/logo/text color; --color-cta is screen-only. */
+  --color-navy: #131826; /* ink / dark surfaces */
+  --color-cta: #1a73e8; /* bright screen accent — CTAs, hovers, highlights (screen only; not for print) */
+  --color-sky: #6ba3f5; /* light accent tint for text on dark surfaces (e.g. on navy) */
+  --color-band: #eef1fa; /* pale section band */
 }
 
 :root {
@@ -235,7 +233,7 @@ img {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #2749e0;
+  --primary: #0842a0; /* deep royal anchor — brand, print, headings, text/links on white */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -247,7 +245,7 @@ img {
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: #2749e0;
+  --ring: #0842a0;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);

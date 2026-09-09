@@ -24,14 +24,14 @@ export default function HomeHero() {
       <div className="relative z-10 mx-auto flex w-full max-w-screen-2xl flex-col justify-end px-4 pb-16 pt-24 md:min-h-[72vh] md:px-6 md:pb-24 md:pt-32 lg:px-12">
         <div className="md:max-w-[50%]">
           <h1 className="max-w-[11ch] font-display text-6xl uppercase leading-[0.98] text-white sm:text-7xl lg:text-8xl">
-            An honest <span className="text-cobalt-bright">practice.</span>
+            An honest <span className="text-sky">practice.</span>
           </h1>
           <p className="mt-5 text-base font-medium lowercase tracking-wide text-white/75 md:text-lg">
             yoga, movement &amp; sound — washington, dc
           </p>
           <Link
             href="/#this-week"
-            className="mt-9 inline-block bg-primary px-10 py-4 font-display text-lg uppercase tracking-[0.08em] text-white transition hover:brightness-110"
+            className="mt-9 inline-block bg-cta px-10 py-4 font-display text-lg uppercase tracking-[0.08em] text-white transition hover:brightness-90"
           >
             Begin
           </Link>

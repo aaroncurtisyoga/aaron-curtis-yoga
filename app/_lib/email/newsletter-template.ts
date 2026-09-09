@@ -1,7 +1,7 @@
 const SITE_URL = "https://www.aaroncurtisyoga.com";
 const INSTAGRAM_URL = "https://www.instagram.com/aaroncurtisyoga/";
 const YOUTUBE_URL = "https://www.youtube.com/channel/UCwwNWri2IhKxXKmQkCpj-uw";
-const COBALT = "#2749e0";
+const ROYAL = "#0842a0"; // deep anchor — email links & accents (text-weight, on white)
 const NAVY = "#131826";
 const INK = "#222222";
 
@@ -212,7 +212,7 @@ interface RenderNewsletterHtmlParams {
 
 /**
  * Wraps TipTap-generated HTML in an email-safe, table-based layout with the
- * Aaron Curtis Yoga wordmark (cobalt/navy accents) and the CAN-SPAM-required
+ * Aaron Curtis Yoga wordmark (royal/navy accents) and the CAN-SPAM-required
  * unsubscribe link.
  */
 export function renderNewsletterHtml({
@@ -245,12 +245,12 @@ export function renderNewsletterHtml({
   .content ul, .content ol { margin: 0 0 16px; padding-left: 24px; }
   .content li { margin-bottom: 6px; }
   .content blockquote {
-    border-left: 4px solid ${COBALT};
+    border-left: 4px solid ${ROYAL};
     margin: 18px 0;
     padding: 4px 0 4px 16px;
     color: #52525b;
   }
-  .content a { color: ${COBALT}; font-weight: 600; }
+  .content a { color: ${ROYAL}; font-weight: 600; }
   .content img { max-width: 100%; height: auto; }
   .content hr { border: none; border-top: 2px solid ${INK}; margin: 26px 0; }
 </style>

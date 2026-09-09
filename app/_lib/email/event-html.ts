@@ -5,7 +5,7 @@ import { formatDateTime, richTextToPlainText } from "@/app/_lib/utils";
 // composer's "Insert event" picker (client) — keep this module pure.
 
 export const NEWSLETTER_SITE_URL = "https://www.aaroncurtisyoga.com";
-export const COBALT = "#2749e0";
+export const CTA = "#1a73e8"; // bright screen accent — email CTA buttons (large fill)
 const DESCRIPTION_MAX_CHARS = 160;
 
 // Quotes too: escaped output also lands inside attribute values (alt="…").
@@ -71,10 +71,10 @@ export function eventListItemHtml(
     }
   }
 
-  // A cobalt button so featured events get a clear call to action, not just a
-  // linked title. Links to external registration when hosted elsewhere.
+  // A bright-accent button so featured events get a clear call to action, not
+  // just a linked title. Links to external registration when hosted elsewhere.
   const cta = withCta
-    ? `<span style="display:block; margin-top:8px; text-align:center;"><a href="${href}" style="display:inline-block; background-color:${COBALT}; color:#ffffff; text-decoration:none; font-weight:700; font-size:13px; letter-spacing:0.02em; padding:8px 16px; border-radius:4px;">Sign Up</a></span>`
+    ? `<span style="display:block; margin-top:8px; text-align:center;"><a href="${href}" style="display:inline-block; background-color:${CTA}; color:#ffffff; text-decoration:none; font-weight:700; font-size:13px; letter-spacing:0.02em; padding:8px 16px; border-radius:4px;">Sign Up</a></span>`
     : "";
 
   // With a CTA button present the title needn't also be a link; without one

@@ -81,6 +81,7 @@ const CheckoutForm: React.FC = () => {
 
         <Button
           type="submit"
+          variant="accent"
           size="lg"
           className="w-full font-medium rounded-lg"
           disabled={!stripe || isLoading}
