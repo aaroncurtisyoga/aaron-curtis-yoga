@@ -1,6 +1,6 @@
 import { MovementCategory, UnitType, WeightUnit } from "@prisma/client";
 
-/** Race day (America/New_York calendar date) — drives the home countdown. */
+/** Race day (America/New_York calendar date). Drives the home countdown. */
 export const HYROX_RACE_YMD = "2026-09-07";
 
 type MovementSeed = {

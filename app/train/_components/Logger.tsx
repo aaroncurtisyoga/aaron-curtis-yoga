@@ -78,7 +78,7 @@ export default function Logger({
       try {
         lock = await (navigator as any).wakeLock?.request("screen");
       } catch {
-        // Denied or unsupported — nothing to do, the logger still works.
+        // Denied or unsupported. The logger still works without it.
       }
     };
     acquire();
@@ -93,10 +93,10 @@ export default function Logger({
   }, []);
 
   // Optimistic persistence with per-entity write chains: at most one request
-  // in flight per entity, and only the LATEST payload for an entity ever
-  // replays — a stale snapshot (from a failed save or a slow request) can
-  // never overwrite newer data. Session fields accumulate into one patch ref
-  // read at send time, so rapid partial edits (RPE then notes) both survive.
+  // in flight per entity, and only the newest payload for an entity replays,
+  // so a stale snapshot can't overwrite newer data. Session fields accumulate
+  // into one patch ref read at send time, so rapid partial edits (RPE then
+  // notes) both survive.
   const pendingOps = useRef<Map<string, () => Promise<unknown>>>(new Map());
   const inflightKeys = useRef<Set<string>>(new Set());
   const sessionPatch = useRef<UpdateLoggedSessionParams>({});
@@ -224,7 +224,7 @@ export default function Logger({
     }
   }
 
-  // The plan's headline scored block — its result mirrors into session.score
+  // The plan's headline scored block. Its result mirrors into session.score
   // so history rows and Trends read the same number.
   const scoredIndex = useMemo(() => {
     const items = planned?.blocks?.items ?? [];
@@ -358,7 +358,7 @@ export default function Logger({
         onClick={() => setPasteOpen(true)}
         className="min-h-12 w-full rounded-2xl border border-dashed border-[#6ba3f5]/40 text-[15px] font-semibold text-[#6ba3f5] active:bg-white/5"
       >
-        No WOD loaded — paste it
+        No WOD loaded. Paste it
       </button>
     )
   ) : null;
@@ -390,7 +390,7 @@ export default function Logger({
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-3 pb-44">
-      {/* Top bar — rare actions live up here, out of the thumb zone */}
+      {/* Top bar: rare actions live up here, out of the thumb zone */}
       <header className="sticky top-0 z-20 -mx-3 mb-3 flex items-center gap-2 bg-[#0a0e16]/95 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur">
         <Link
           href="/train"

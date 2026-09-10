@@ -1,5 +1,5 @@
 /**
- * CrossFit DC's daily WOD via PushPress Train's public widget API — the same
+ * CrossFit DC's daily WOD via PushPress Train's public widget API, the same
  * unauthenticated endpoint the "Workout" button on crossfitdc.com calls. The
  * tenant id is public (it sits in the site's HTML). One fetch per tap, result
  * cached in PlannedSession, manual paste as the fallback if this ever breaks.
@@ -40,7 +40,7 @@ export type FetchedWod = {
   };
 };
 
-/** date is YYYY-MM-DD. Returns null on any failure — callers degrade to paste. */
+/** date is YYYY-MM-DD. Returns null on any failure; callers degrade to paste. */
 export async function fetchCrossfitWod(
   date: string,
 ): Promise<FetchedWod | null> {

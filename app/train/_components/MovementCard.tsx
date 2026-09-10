@@ -31,7 +31,7 @@ export default function MovementCard({
 }: {
   item: LoggedMovementDto;
   lastSets?: SetEntry[];
-  /** committedEntry is present only when a NEW set was just committed. */
+  /** committedEntry is present only when a new set was just committed. */
   onUpdateSets: (
     itemId: string,
     sets: SetEntry[],
@@ -60,12 +60,12 @@ export default function MovementCard({
 
   // Ghost values: last session's same set index, else the previous row today,
   // else last session's final set. Checking ✓ with untouched fields commits
-  // the ghost — a repeat set costs exactly one tap.
+  // the ghost, so a repeat set costs one tap.
   const ghost: SetEntry | undefined =
     lastSets?.[item.sets.length] ?? item.sets.at(-1) ?? lastSets?.at(-1);
 
-  // Ghost weight expressed in the card's ACTIVE unit — a 40 kg ghost must
-  // never one-tap-commit as 40 lb after a unit toggle.
+  // Ghost weight is expressed in the card's active unit, so a 40 kg ghost
+  // can't one-tap-commit as 40 lb after a unit toggle.
   const ghostWeight =
     ghost?.weight !== undefined && ghost?.weight !== null
       ? toUnit(
@@ -148,7 +148,7 @@ export default function MovementCard({
 
   return (
     <section className="rounded-2xl bg-[#131826] p-3">
-      {/* Header: name + unit chip + remove (two-tap confirm, no dialogs) */}
+      {/* Remove is a two-tap confirm, no dialog */}
       <div className="mb-2 flex items-center gap-2">
         <h2
           className={`${ANTON} flex-1 truncate text-lg uppercase tracking-wide text-neutral-50`}
@@ -190,7 +190,6 @@ export default function MovementCard({
         </button>
       </div>
 
-      {/* Column labels */}
       <div style={grid} className="mb-1 px-0.5">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
           Set
@@ -208,7 +207,7 @@ export default function MovementCard({
         <span />
       </div>
 
-      {/* Committed sets — always live inputs, edits save on blur */}
+      {/* Committed sets: always live inputs, edits save on blur */}
       {item.sets.map((set, idx) => (
         <div key={idx} style={grid} className="mb-1.5">
           <span
@@ -246,7 +245,7 @@ export default function MovementCard({
         </div>
       ))}
 
-      {/* The readout: next set, ghost-prefilled, one fat tap to commit */}
+      {/* Next set row, ghost-prefilled, one tap to commit */}
       <div
         style={grid}
         className="rounded-xl border border-white/10 bg-black/20 p-1.5"

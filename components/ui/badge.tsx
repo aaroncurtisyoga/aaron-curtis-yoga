@@ -15,7 +15,7 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground",
-        // Status variants — one accessible (AA) source of truth, no low-contrast yellow.
+        // Status variants: dark text on a pale tint, so no low-contrast yellow.
         success: "border-transparent bg-green-100 text-green-800",
         warning: "border-transparent bg-amber-100 text-amber-800",
         info: "border-transparent bg-primary/10 text-primary",

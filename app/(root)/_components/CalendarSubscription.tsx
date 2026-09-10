@@ -125,12 +125,10 @@ const CalendarSubscription: FC<CalendarSubscriptionProps> = ({
     </>
   );
 
-  // If inline mode, return just the button
   if (inline) {
     return dropdownButton;
   }
 
-  // Otherwise, return with Card wrapper
   return (
     <Card className="w-full mb-4 bg-gradient-to-br from-blue-50/50 to-transparent border border-gray-200 shadow-none hover:shadow-sm transition-all duration-300 rounded-2xl @container">
       <CardContent className="px-4 py-3.5 @sm:px-5 @sm:py-4">

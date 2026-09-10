@@ -75,9 +75,8 @@ const SOURCE_LABELS: Record<PlannedSessionDto["source"], string> = {
 };
 
 /**
- * The plan IS the logging surface: every block has a fat checkmark, scored
- * blocks take their result right under the prescription. No separate section
- * to scroll to.
+ * The plan doubles as the logging surface: each block has its own check
+ * button, and scored blocks take their result inline under the prescription.
  */
 export default function PlanCard({
   planned,
@@ -153,7 +152,6 @@ export default function PlanCard({
                   result.done && "bg-cta/5",
                 )}
               >
-                {/* The checkmark: one tap logs "did this block" */}
                 <button
                   type="button"
                   onClick={() => onToggle(i)}
@@ -194,7 +192,6 @@ export default function PlanCard({
                     {item.text}
                   </p>
 
-                  {/* Result entry lives right under the prescription */}
                   {kind === "time" && (
                     <div className="mt-2 flex items-center gap-2">
                       <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">

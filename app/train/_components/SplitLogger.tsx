@@ -8,9 +8,7 @@ import { ANTON, fmtTime } from "./logger-utils";
 /**
  * Full-screen lap logger for race-order blocks: one giant tap cycles
  * Run 1 → Roxzone → Station → Roxzone → Run 2 … writing every segment's
- * time. Modeled on the watch-app "lap button" pattern every Hyrox sim tool
- * converges on, with the one recovery affordance the research found anywhere:
- * undo last lap.
+ * time. Undo last lap steps back one segment.
  */
 export default function SplitLogger({
   title,
@@ -136,7 +134,7 @@ export default function SplitLogger({
         </div>
       </div>
 
-      {/* The lap pad — thumb zone, impossible to miss */}
+      {/* Lap pad, in the thumb zone */}
       <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {running && (
           <button

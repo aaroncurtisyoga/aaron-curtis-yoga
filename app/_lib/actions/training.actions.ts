@@ -98,7 +98,7 @@ export const getTrainingHome = async () => {
   return serialize({ todaySessions, recentSessions, todayPlans });
 };
 
-/** Manual "pull from Garmin now" — same sync the nightly cron runs. */
+/** Manual "pull from Garmin now": the same sync the nightly cron runs. */
 export const syncGarminNow = async () => {
   try {
     await requireAdmin();
@@ -159,9 +159,8 @@ export const getLoggerData = async (sessionId: string) => {
       },
     }),
     prisma.movement.findMany({ orderBy: { name: "asc" } }),
-    // Latest non-empty sets per movement by SESSION DATE (not createdAt, so
-    // backfilled entries don't masquerade as most recent), with no row-count
-    // window that would forget older lifts.
+    // Latest non-empty sets per movement, ordered by session date not
+    // createdAt, so backfilled entries don't look like the most recent.
     prisma.$queryRaw<{ movementId: string; sets: unknown }[]>`
       SELECT DISTINCT ON (lm."movementId") lm."movementId", lm."sets"
       FROM "LoggedMovement" lm
@@ -197,9 +196,8 @@ const normalizeName = (s: string) =>
 
 /**
  * Pre-populate the session's movement cards from the plan's STRENGTH and
- * CONDITIONING blocks so logging a planned day starts at "tap ✓", not at
- * "search for Back Squat". Unmatched lines (accessory work not in the
- * library) are skipped silently — the inline picker covers those.
+ * CONDITIONING blocks. Lines that don't match a movement in the library
+ * (accessory work) are skipped; the inline picker covers those.
  */
 async function materializePlanMovements(
   sessionId: string,
@@ -265,7 +263,7 @@ export const createLoggedSession = async ({
     const sessionDate = date ? dateFromYmd(date) : etToday();
 
     // Link the day's prescription when one exists. Hyrox comes from the seeded
-    // plan; CrossFit is fetched on demand from PushPress (failure is fine —
+    // plan; CrossFit is fetched on demand from PushPress (failure is fine:
     // the logger offers manual paste instead).
     let plannedSessionId: string | null = null;
     let planBlocks: Prisma.JsonValue | null = null;
@@ -377,8 +375,8 @@ export const updateLoggedSession = async (
 export const deleteLoggedSession = async (sessionId: string) => {
   try {
     await requireAdmin();
-    // Mark any linked Garmin activity dismissed FIRST, or the nightly sync
-    // sees the nulled link and resurrects the session forever.
+    // Mark any linked Garmin activity dismissed before the delete, or the
+    // nightly sync sees the nulled link and recreates the session.
     await prisma.garminActivity.updateMany({
       where: { loggedSessionId: sessionId },
       data: { dismissed: true },
@@ -419,7 +417,7 @@ export const addMovementToSession = async ({
   }
 };
 
-/** The autosave workhorse — called (debounced) on every set edit. */
+/** Called (debounced) on every set edit. */
 export const updateLoggedMovement = async (
   loggedMovementId: string,
   { sets, notes }: { sets?: SetEntry[]; notes?: string | null },

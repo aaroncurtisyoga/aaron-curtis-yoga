@@ -810,7 +810,7 @@ const NewsletterEditor: FC<NewsletterEditorProps> = ({ newsletter }) => {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Last-glance check on WHAT is being sent, not just to whom. */}
+          {/* Last-glance check on what's being sent, not just who gets it. */}
           <div className="rounded-md border border-border bg-muted/40 px-3 py-2">
             <p className="truncate text-sm font-medium">{subjectValue}</p>
             {previewTextValue ? (

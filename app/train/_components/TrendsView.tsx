@@ -44,8 +44,8 @@ export type TrendSession = {
   plannedSession: { title: string } | null;
 };
 
-// Chart hues from the site's blue system, each used as a lone series on the
-// dark surface (contrast-validated): sky for lines, cta blue for bars.
+// Chart hues from the site's blue system, one series per chart on the dark
+// surface: sky for lines, cta blue for bars.
 const LINE = "#6ba3f5";
 const BAR = "#1a73e8";
 const GRID = "rgba(255,255,255,0.06)";
@@ -181,8 +181,8 @@ export default function TrendsView({
       ? sessions
       : sessions.filter((s) => s.activityType === worldFilter);
 
-  // Test days, simulations, and anything with recorded splits — the plan's
-  // promised "Benchmarks tab", lined up oldest problems first: newest on top.
+  // Test days, simulations, and anything with recorded splits, the plan's
+  // "Benchmarks tab". Sessions come back newest first, so this list is too.
   const benchmarks = useMemo(
     () =>
       sessions
@@ -269,7 +269,7 @@ export default function TrendsView({
             <Stat label="Sessions" value={String(points.length)} />
           </div>
 
-          {/* Charts — one series each, titled, hover tooltips */}
+          {/* Charts */}
           {isWeight ? (
             <>
               <section className="mb-3 rounded-2xl bg-[#131826] p-3">
@@ -402,7 +402,7 @@ export default function TrendsView({
             ))}
           </section>
 
-          {/* Benchmarks & simulations — the plan's promised "Benchmarks tab" */}
+          {/* Benchmarks & simulations */}
           {benchmarks.length > 0 && (
             <section className="mb-6">
               <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">

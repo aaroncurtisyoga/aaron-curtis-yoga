@@ -47,7 +47,7 @@ export function fmtDigits(digits: string): string {
   return `${Number(d.slice(0, -2))}:${d.slice(-2)}`;
 }
 
-/** One plate-ish jump per unit — the common stepper increment. */
+/** Stepper increment: about one plate per unit. */
 export function weightStep(unit: WeightUnit): number {
   return unit === WeightUnit.KG ? 2.5 : 5;
 }
@@ -98,7 +98,7 @@ export function setSummary(set: SetEntry): string {
 /** Format a @db.Date ISO string ("2026-07-31T00:00:00.000Z") as a day label. */
 export function fmtDay(iso: string, opts?: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC", // the ISO string is already the calendar day — don't shift it
+    timeZone: "UTC", // the ISO string is already the calendar day, don't shift it
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -173,7 +173,7 @@ export function roxzoneTotal(splits: SplitEntry[]): number {
     .reduce((acc, s) => acc + s.sec, 0);
 }
 
-/** Run fade: last run vs first run, as a percentage (pros hold under 5%). */
+/** Run fade: last run vs first run, as a percentage. */
 export function runFade(splits: SplitEntry[]): number | null {
   const runs = splits.filter((s) => /^Run \d+$/.test(s.label));
   if (runs.length < 2) return null;

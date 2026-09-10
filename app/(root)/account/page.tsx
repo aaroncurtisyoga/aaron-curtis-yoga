@@ -26,11 +26,9 @@ interface AccountPageProps {
 }
 
 const AccountPage: FC<AccountPageProps> = async ({ searchParams }) => {
-  // Await the auth function to get the session claims
   const authResult = await auth();
   const userId = authResult?.sessionClaims?.metadata?.userId as string;
 
-  // Await the searchParams promise before accessing its properties
   const resolvedParams = await searchParams;
   const ordersPage = Number(resolvedParams?.ordersPage) || 1;
 

@@ -8,12 +8,12 @@ import { dateFromYmd } from "@/app/_lib/utils/training-date";
  * Pulls recent Garmin activities and auto-creates a linked RUN LoggedSession
  * for every run, so runs land in /train without any manual logging. Also
  * silently collects nightly wellness (HRV, resting HR, sleep) into
- * DailyWellness — readiness baselines need ~3 weeks of history, so collection
- * runs long before any UI exists. Invoked by the daily cron
+ * DailyWellness. Nothing reads it yet; it's collected now so the history is
+ * there when something does. Invoked by the daily cron
  * (/api/cron/sync-garmin) and the manual sync button.
  *
  * Auth: long-lived OAuth tokens minted once by `npx tsx scripts/garmin-login.ts`
- * (run locally by the owner — the password is never stored). Tokens come from
+ * (run locally by the owner; the password is never stored). Tokens come from
  * the GARMIN_TOKENS env var (prod) or .garmin-tokens.json (local, gitignored).
  */
 

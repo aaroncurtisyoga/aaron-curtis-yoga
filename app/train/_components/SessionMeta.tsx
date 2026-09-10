@@ -37,7 +37,7 @@ function Chip({
 
 function parseTimeScore(score: string | null): number | undefined {
   if (!score) return undefined;
-  // Accepts m:ss and h:mm:ss — race sims and race day run past the hour.
+  // Accepts m:ss and h:mm:ss: race sims and race day run past the hour.
   const m = score.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
   if (!m) return undefined;
   return Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3]);
@@ -49,9 +49,8 @@ function parseAmrap(score: string | null): { rounds?: number; reps?: number } {
 }
 
 /**
- * Session-level fields. Everything optional and blankable — RPE/felt/notes
- * must never cost a tap when skipped (research: mandatory classification taps
- * are the top logging complaint).
+ * Session-level fields. Everything is optional and can be blanked, so
+ * skipping RPE, felt, or notes costs no taps.
  */
 export default function SessionMeta({
   session,

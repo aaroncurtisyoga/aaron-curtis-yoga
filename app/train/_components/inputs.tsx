@@ -6,9 +6,9 @@ import { cn } from "@/app/_lib/utils/index";
 import { fmtDigits, secondsToDigits } from "./logger-utils";
 
 /**
- * Numeric field per the mobile-web research: type="text" + inputmode (not
- * type="number"), ≥16px font so iOS never zooms, select-on-focus so typing
- * replaces, parse both "." and "," and clamp on blur.
+ * Numeric field: type="text" + inputmode, not type="number", which lets a
+ * scroll wheel change the value. 19px font so iOS doesn't zoom on focus,
+ * select-on-focus so typing replaces, accepts "." or "," and rounds on blur.
  */
 export function NumField({
   value,
@@ -51,8 +51,8 @@ export function NumField({
       onBlur={() => {
         const raw = text.replace(",", ".").trim();
         if (raw === "") {
-          // Only a real clear commits — merely focusing and leaving an empty
-          // field must not delete stored data.
+          // Only a real clear commits. Focusing and leaving an empty field
+          // must not delete stored data.
           if (value !== undefined) onCommit(undefined);
           return;
         }
@@ -136,7 +136,7 @@ export function TimeField({
   );
 }
 
-/** Tappable lb/kg suffix chip — toggles the entry unit for one movement. */
+/** Tappable lb/kg suffix chip. Toggles the entry unit for one movement. */
 export function UnitChip({
   unit,
   onToggle,
@@ -156,7 +156,7 @@ export function UnitChip({
   );
 }
 
-/** Big square stepper button — the sweaty-hands alternative to the keyboard. */
+/** Big square stepper button, for adjusting a value without the keyboard. */
 export function Stepper({
   label,
   onPress,

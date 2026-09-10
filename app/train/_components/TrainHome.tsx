@@ -205,8 +205,7 @@ export default function TrainHome({
       })()}
 
       {(() => {
-        // Rest days show guidance, not an invitation to train — matters most
-        // in taper week, which is three near-rest days in a row.
+        // Rest days show the plan's note instead of an invitation to train.
         const hyroxPlan = todayPlans.find((p) => p.world === "HYROX");
         const isRest =
           hyroxPlan &&
@@ -236,7 +235,7 @@ export default function TrainHome({
         </section>
       )}
 
-      {/* The menu: what MIGHT happen today. Tap = commit + start logging. */}
+      {/* Tap an activity to create a session and start logging. */}
       <section className="mb-6">
         <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
           Start

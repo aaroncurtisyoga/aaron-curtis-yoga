@@ -15,7 +15,7 @@ export type LoggedMovementDto = {
 
 export type SessionDto = {
   id: string;
-  date: string; // ISO from a @db.Date (UTC midnight — format with UTC, not ET)
+  date: string; // ISO from a @db.Date (UTC midnight, format with UTC not ET)
   activityType: ActivityType;
   rpe: number | null;
   felt: number | null;

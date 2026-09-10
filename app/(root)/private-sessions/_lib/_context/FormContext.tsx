@@ -82,7 +82,6 @@ export const WizardFormProvider: FC<{ children: ReactNode }> = ({
   const updateFormData = (data: Partial<PrivateSessionFormData>) => {
     const newData = (prev: PrivateSessionFormData) => ({ ...prev, ...data });
     setFormData(newData);
-    // Save to localStorage
     if (typeof window !== "undefined") {
       const updatedData = newData(formData);
       localStorage.setItem(
@@ -94,7 +93,6 @@ export const WizardFormProvider: FC<{ children: ReactNode }> = ({
 
   const resetFormData = () => {
     setFormData({});
-    // Clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem("privateSessionFormData");
     }
