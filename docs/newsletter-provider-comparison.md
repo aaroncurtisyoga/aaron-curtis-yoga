@@ -1,124 +1,31 @@
-# Newsletter Provider Comparison: Kit vs Resend
+# Newsletter provider: why Resend
 
-Evaluating replacements for Mailchimp (free tier shrunk to 250 subscribers). Primary need: branded monthly newsletter. Secondary (future): transactional emails for event registration confirmations.
+**Decided July 2026. Shipped.** Mailchimp's free tier dropped to 250 subscribers, which forced a move. The two real candidates were Kit and Resend.
 
-## Why use a provider vs building from scratch?
+## What the site actually needs
 
-Building from scratch means: storing subscribers in your own DB, building an email composer UI, creating branded HTML email templates (email HTML is notoriously painful — no flexbox, limited CSS, every client renders differently), handling unsubscribe/CAN-SPAM compliance, bounce handling, spam complaints, deliverability reputation, and analytics. That's weeks of work.
+A branded monthly newsletter, a signup form in the footer, and eventually transactional email for event registration confirmations. Everything else is optional.
 
-A provider gives you all of that out of the box. The only code on your site is a signup form in the footer.
+Building it in-house was never seriously on the table. Subscriber storage is easy, but email HTML is not: no flexbox, inconsistent CSS support, and every client renders differently. Add unsubscribe and CAN-SPAM handling, bounce processing, and deliverability reputation, and it's weeks of work to land somewhere worse than a provider's free tier.
 
----
+## The tradeoff
 
-## Real-World Scenarios
+Kit is the better product for writing newsletters. Its visual editor, subscriber tags, engagement segments, and automations are all things Resend either lacks or exposes only as API primitives. Its free tier is also ten times larger: 10,000 subscribers against Resend's 1,000.
 
-### Scenario 1: Someone subscribes on your site
+Resend wins on one axis that mattered more: it's one platform for both marketing and transactional email. Event confirmations, receipts, and the newsletter can share a sender identity, a domain reputation, and one API key. With Kit, transactional email would have meant a second provider.
 
-**Both Kit and Resend — identical experience:**
+The signup-form code is identical either way, one API call in a server action, so integration cost didn't break the tie.
 
-1. Visitor enters email in your footer form, clicks "Subscribe"
-2. Your server action calls the provider's API to add the subscriber
-3. Subscriber gets a confirmation/welcome email (automatic)
+## What I gave up
 
-The code on your site is nearly identical either way — one API call in a server action.
+Kit's tags, engagement-based segments, and visual automations. Resend has a flat contact list per audience, so anything resembling segmentation has to be built on top of the API. That hasn't bitten yet at current list size, but it's the first thing that will hurt if the list grows or the sends get more targeted than "everyone, monthly."
 
-### Scenario 2: Composing and sending a monthly newsletter
+## What shipped
 
-**Kit:**
+Drafts live in the `Newsletter` Prisma model and are composed in a TipTap editor at `/admin/newsletter`. Delivery goes through the Resend Broadcast API, which also owns scheduling, so there's no cron. Unsubscribes are handled by Resend through `{{{RESEND_UNSUBSCRIBE_URL}}}` in the template. The `/api/webhooks/resend` handler feeds opens, clicks, bounces, and complaints back into per-issue counters, deduped through a `NewsletterEmailEvent` ledger.
 
-1. Log into kit.com
-2. Click "Broadcasts" → "New Broadcast"
-3. Use their visual editor — drag in images, type text, add buttons/links
-4. Apply your brand colors/fonts in the template settings (one-time setup)
-5. Preview on desktop/mobile
-6. Hit "Send" (or schedule for later)
-7. Done. ~10 minutes.
+The Mailchimp list was imported once with `npx tsx scripts/import-subscribers.ts <export.csv>`.
 
-**Resend:**
+## Still open
 
-1. Log into resend.com
-2. Click "Broadcasts" → "Create Broadcast"
-3. Use their web editor (simpler than Kit — more like a basic rich text editor with blocks)
-4. OR write a React Email template in your codebase (JSX), push to git, reference it in the broadcast
-5. Preview and send
-6. Done. ~10-15 minutes with web editor, longer if coding templates.
-
-**Key difference:** Kit's editor is more polished and has more layout options (columns, image+text combos, etc.). Resend's broadcast editor is functional but more minimal. If you want to code your email templates as React components, only Resend supports that — but that's more work, not less.
-
-### Scenario 3: Subscriber management and segmentation
-
-**Kit:**
-
-- Full subscriber dashboard with tags, segments, custom fields
-- Visual automation builder (e.g., "when someone subscribes, send welcome sequence")
-- See subscriber growth over time
-- Filter by engagement (active, cold, etc.)
-
-**Resend:**
-
-- "Audiences" section shows contacts
-- Basic list management — add, remove, view
-- No tags, segments, or automations on free tier
-- Much simpler (which could be a pro or con)
-
-**Key difference:** Kit treats subscriber management as a core feature. Resend treats it as a basic contact list.
-
-### Scenario 4: Analytics
-
-**Kit:**
-
-- Open rate, click rate, click map
-- Per-subscriber engagement tracking
-- Which links got clicked most
-- Unsubscribe reasons
-
-**Resend:**
-
-- Open rate, click rate, bounce rate
-- Per-email analytics
-- More basic — focused on delivery metrics
-
-**Key difference:** Kit gives you more creator-oriented insights. Resend gives you developer-oriented delivery metrics.
-
-### Scenario 5: Code changes in your Next.js app
-
-**Kit:**
-
-- Install no new packages (just REST API calls)
-- Server action: `fetch('https://api.kit.com/v4/forms/{formId}/subscribers', ...)` with the email
-- Footer form stays the same UI-wise
-- Env vars: `KIT_API_KEY`, `KIT_FORM_ID`
-- ~20 lines of server action code
-
-**Resend:**
-
-- Install `resend` npm package
-- Server action: `resend.contacts.create({ email, audienceId })`
-- Footer form stays the same UI-wise
-- Env vars: `RESEND_API_KEY`, `RESEND_AUDIENCE_ID`
-- ~15 lines of server action code
-
-**Key difference:** Resend has a slightly nicer SDK. Kit uses plain fetch. Both are trivial.
-
----
-
-## Summary
-
-|                           | Kit                                           | Resend                                                          |
-| ------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
-| **Writing newsletters**   | Better editor, more templates                 | Basic editor, or code in React                                  |
-| **Subscriber management** | Rich (tags, segments, automations)            | Basic contact list                                              |
-| **Analytics**             | Creator-focused, detailed                     | Developer-focused, delivery metrics                             |
-| **Code complexity**       | Same                                          | Same                                                            |
-| **Free tier**             | 10,000 subscribers                            | 1,000 contacts                                                  |
-| **Best for**              | "I want to write and send newsletters easily" | "I want one platform for all email (transactional + marketing)" |
-
-## Recommendation
-
-- If primary need is **compose a branded monthly newsletter and send it** → Kit wins on the editing/sending experience.
-- If you later want to also send **transactional emails** from your app (order confirmations, booking confirmations) from one platform → Resend wins on unification.
-
-## Open Questions
-
-- Would something like Partiful be better for event registration/confirmation flows?
-- Do we need transactional email (event confirmations) from the same platform, or is that a separate concern?
+Whether event registration confirmations should come from Resend too, or stay with Stripe's receipts. That was the main argument for choosing Resend and it hasn't been built yet.
