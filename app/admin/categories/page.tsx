@@ -16,7 +16,6 @@ import {
   createCategory,
 } from "@/app/_lib/actions/category.actions";
 import { CategoryFormSchema } from "@/app/_lib/schema";
-import { handleError } from "@/app/_lib/utils";
 import TableCategoryManagement from "@/app/admin/categories/_components/TableCategoryManagement";
 import AdminPage from "@/app/admin/_components/AdminPage";
 import { CheckCircle, Plus, X, Layers } from "lucide-react";
@@ -76,7 +75,7 @@ const AdminCategories: FC = () => {
         }, 3000);
       }
     } catch (e) {
-      handleError("Error creating category", e);
+      console.error("Error creating category", e);
       setError("category", {
         type: "server",
         message: "There was an issue creating the category.",

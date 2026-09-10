@@ -5,7 +5,6 @@ import {
   deleteEvent,
   toggleEventFeatured,
 } from "@/app/_lib/actions/event.actions";
-import { handleError } from "@/app/_lib/utils";
 import type { EventTableFilters } from "@/app/admin/events/_components/hooks/useEventTableFilters";
 
 interface Category {
@@ -72,7 +71,7 @@ export function useEventTableData(
         setTotalPages(pages);
         setTotalCount(count);
       } catch (error) {
-        handleError("Failed to fetch events", error);
+        console.error("Failed to fetch events", error);
         toast.error("Failed to fetch events. Please try again.");
       } finally {
         setLoading(false);
@@ -92,7 +91,7 @@ export function useEventTableData(
       }
       throw new Error("Failed to delete event");
     } catch (error) {
-      handleError("Failed to delete event", error);
+      console.error("Failed to delete event", error);
       toast.error("Failed to delete event. Please try again.");
       return false;
     }
@@ -118,7 +117,7 @@ export function useEventTableData(
           event.id === eventId ? { ...event, isFeatured: !next } : event,
         ),
       );
-      handleError("Failed to update featured state", error);
+      console.error("Failed to update featured state", error);
       toast.error("Couldn't update featured state. Please try again.");
     }
   };

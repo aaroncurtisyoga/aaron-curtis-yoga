@@ -12,7 +12,6 @@ import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createCategory } from "@/app/_lib/actions/category.actions";
 import { CategoryFormSchema } from "@/app/_lib/schema";
-import { handleError } from "@/app/_lib/utils";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Tag } from "lucide-react";
 
@@ -48,7 +47,7 @@ const CreateCategory: FC = () => {
         }, 3000);
       }
     } catch (e) {
-      handleError("Error creating category", e);
+      console.error("Error creating category", e);
       setError("category", {
         type: "server",
         message: "There was an issue creating the category.",

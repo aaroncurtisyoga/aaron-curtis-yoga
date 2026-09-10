@@ -4,7 +4,6 @@ import {
   getEventsByMonth,
   deleteEvent,
 } from "@/app/_lib/actions/event.actions";
-import { handleError } from "@/app/_lib/utils";
 import type { EventWithLocationAndCategory } from "@/app/_lib/types";
 import type { EventTableFilters } from "./useEventTableFilters";
 
@@ -32,7 +31,7 @@ export function useCalendarData(filters: Omit<EventTableFilters, "page">) {
         });
         setEvents(data);
       } catch (error) {
-        handleError("Failed to fetch calendar events", error);
+        console.error("Failed to fetch calendar events", error);
         toast.error("Failed to fetch events.");
       } finally {
         setLoading(false);
@@ -75,7 +74,7 @@ export function useCalendarData(filters: Omit<EventTableFilters, "page">) {
       }
       throw new Error("Failed to delete event");
     } catch (error) {
-      handleError("Failed to delete event", error);
+      console.error("Failed to delete event", error);
       toast.error("Failed to delete event. Please try again.");
       return false;
     }
