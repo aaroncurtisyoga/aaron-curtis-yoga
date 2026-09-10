@@ -2,6 +2,7 @@
 
 import { FC, useEffect, useState } from "react";
 import { User } from "@prisma/client";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -20,7 +21,6 @@ import TableLoading from "@/app/_components/TableLoading";
 import UserManagementCard from "@/app/admin/users/_components/UserManagementCard";
 import { deleteUser, getAllUsers } from "@/app/_lib/actions/user.actions";
 import { TableManageUsersColumns } from "@/app/_lib/constants";
-import { handleError } from "@/app/_lib/utils";
 
 const ManageUsersTable: FC = () => {
   const [loading, setLoading] = useState(true);
@@ -39,9 +39,11 @@ const ManageUsersTable: FC = () => {
           query: searchText,
         });
         setUsers(data);
-        setLoading(false);
       } catch (error) {
-        handleError("Failed to fetch users", error);
+        console.error("Failed to fetch users", error);
+        toast.error("Failed to load users. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchUsers();

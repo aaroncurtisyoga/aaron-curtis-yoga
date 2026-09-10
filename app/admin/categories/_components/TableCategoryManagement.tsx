@@ -1,6 +1,7 @@
 "use client";
 
 import { Dispatch, FC, SetStateAction, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -15,7 +16,6 @@ import { Category } from "@prisma/client";
 import BasicModal from "@/app/_components/BasicModal";
 import CategoryCard from "@/app/admin/categories/_components/CategoryCard";
 import { deleteCategory } from "@/app/_lib/actions/category.actions";
-import { handleError } from "@/app/_lib/utils";
 import { Trash2 } from "lucide-react";
 
 interface CategoryManagementTableProps {
@@ -40,7 +40,8 @@ const TableCategoryManagement: FC<CategoryManagementTableProps> = ({
         onOpenChange();
       }
     } catch (error) {
-      handleError(error);
+      console.error("Failed to delete category", error);
+      toast.error("Failed to delete category. Please try again.");
     }
   };
 
