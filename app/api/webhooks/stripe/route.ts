@@ -3,7 +3,6 @@ import { OrderType } from "@prisma/client";
 import stripe from "stripe";
 import prisma from "@/app/_lib/prisma";
 import { createOrder } from "@/app/_lib/actions/order.actions";
-import { handleError } from "@/app/_lib/utils";
 
 function buildOrderData(
   stripeId: string,
@@ -34,7 +33,7 @@ async function processOrder(order: ReturnType<typeof buildOrderData>) {
     const newOrder = await createOrder(order);
     return NextResponse.json({ message: "OK", order: newOrder });
   } catch (error) {
-    handleError(error, "creating order");
+    console.error("Error creating order:", error);
     return NextResponse.json(
       { message: "Error creating order" },
       { status: 500 },
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
   try {
     stripeEvent = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
-    handleError(err, "Stripe webhook verification");
+    console.error("Stripe webhook verification failed:", err);
     return NextResponse.json(
       { message: "Webhook verification failed" },
       { status: 400 },

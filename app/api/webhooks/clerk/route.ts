@@ -4,14 +4,13 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Webhook } from "svix";
 import prisma from "@/app/_lib/prisma";
-import { handleError } from "@/app/_lib/utils";
 
 export async function POST(req: Request) {
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhooks
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    handleError("Please add WEBHOOK_SECRET from Clerk Dashboard to .env.local");
+    console.error("Missing CLERK_WEBHOOK_SECRET environment variable");
     return new Response("Configuration error", { status: 500 });
   }
 
@@ -45,7 +44,7 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    handleError(err, "verifying webhook");
+    console.error("Clerk webhook verification failed:", err);
     return new Response("Error occurred", {
       status: 400,
     });
@@ -77,7 +76,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "OK", user: newUser });
       }
     } catch (error) {
-      handleError(error, "creating user");
+      console.error("Error creating user:", error);
       return NextResponse.json(
         { message: "Error creating user" },
         { status: 500 },
@@ -99,7 +98,7 @@ export async function POST(req: Request) {
       });
       return NextResponse.json({ message: "OK", user: updatedUser });
     } catch (error) {
-      handleError(error, "updating user");
+      console.error("Error updating user:", error);
       return NextResponse.json(
         { message: "Error updating user" },
         { status: 500 },
@@ -114,7 +113,7 @@ export async function POST(req: Request) {
       const deletedUser = await prisma.user.delete({ where: { clerkId: id! } });
       return NextResponse.json({ message: "OK", user: deletedUser });
     } catch (error) {
-      handleError(error, "deleting user");
+      console.error("Error deleting user:", error);
       return NextResponse.json(
         { message: "Error deleting user" },
         { status: 500 },
