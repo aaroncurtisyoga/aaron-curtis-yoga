@@ -1,322 +1,87 @@
-<h1 style="text-align: center;">AaronCurtisYoga.com</h1>
-<p style="text-align: center;">Fullstack Next.js App for Aaron Curtis Yoga</p>
+# Aaron Curtis Yoga
 
-## <a name="table">Table of Contents</a>
+Booking, payments, and class scheduling for a DC yoga instructor. Live at **[aaroncurtisyoga.com](https://aaroncurtisyoga.com)**.
 
-1. [Intro](#introduction)
-2. [Quick Start](#quick-start)
-3. [Tech Stack](#tech-stack)
-4. [Features](#features)
-5. [Postgres Database](#postgres)
-6. [Analytics & Tracking](#analytics)
-7. [Testing](#testing)
-8. [Contact](#contact)
+![The site's home page](docs/screenshots/home.png)
 
-## <a name="introduction">Introduction</a>
+I teach yoga in DC, and I built and run the site my students use. Solo build, in production on Vercel.
 
-This app is designed to help current and future yoga students:
+- **Events and checkout.** Browse, search, and register. Stripe for paid events, with the order written server-side from the webhook.
+- **Private sessions.** A four-step booking wizard for session packages, ending at Stripe Elements.
+- **Class sync.** Two partner studios publish schedules with no public API, so a nightly cron scrapes both and folds them into one calendar.
+- **Newsletter.** Composed, scheduled, and sent from the admin area through Resend, with a public archive of past issues.
+- **Admin.** Event CRUD, orders, subscribers, users, and a sync dashboard, behind a Clerk role check.
+- **Google Calendar.** Every event write mirrors through to a real calendar, so students can subscribe.
 
-- Learn about Aaron Curtis
-- Find weekly schedules
-- Sign up for the newsletter
-- Register for events
+## Stack
 
-## <a name="quick-start">Quick Start</a>
+| Layer     | What                                                          |
+| --------- | ------------------------------------------------------------- |
+| Framework | Next.js 16 (App Router, server actions), React 19, TypeScript |
+| Data      | Prisma 6 against Neon-backed Postgres                         |
+| UI        | shadcn/ui on Radix primitives, Tailwind CSS 4                 |
+| Auth      | Clerk, route protection in `proxy.ts`                         |
+| Payments  | Stripe                                                        |
+| Email     | Resend                                                        |
+| Google    | Calendar via service account, Maps for locations              |
+| Scraping  | `playwright-core` against Browserless                         |
+| Ops       | Vercel, cron jobs, Vercel Blob, Playwright for E2E            |
 
-### Environment Configuration
+## The interesting parts
 
-```bash
-cp .env.example .env.local
-```
+### Scraping two studios on a schedule
 
-> For complete environment variable documentation, see [Environment Variables Reference Guide](docs/ENVIRONMENT_VARIABLES.md)
+Bright Bear Yoga (Momence) and DC Bouldering Project (ZoomShift) both list classes I teach, and neither exposes an API. A daily cron scrapes them with Playwright running on Browserless, so there's no browser binary to install and no drift between a laptop and a serverless function.
 
-### Common Scripts
+- The two sources run sequentially inside a 180s budget, each in its own try/catch, so one studio changing its markup doesn't take the other down.
+- Retries fire only on Browserless rate-limit and connection errors, three attempts at 5s then 10s. A broken selector throws on the first try, because retrying won't fix it.
+- A crawl returning zero events counts as a failure, not an empty schedule. That's the difference between a studio outage and silently wiping a week off the site.
+- Writes dedupe twice: on `sourceId` in the payload, since a class can appear in two month views, and at the database via `@@unique([sourceType, sourceId])`.
 
-- `npm run dev` to start the development server
-- `npm run build` for production build
-- `npm run lint` to run ESLint
-- `npm run lint:fix` to fix linting errors
+Scraped classes land on the public calendar next to anything I schedule myself:
 
-### Web Scraping & Event Sync
+![Month view of the class calendar](docs/screenshots/schedule-month.png)
 
-The application automatically syncs yoga classes from **two sources**:
+### Orders are written by the Stripe webhook
 
-1. **Bright Bear Yoga** - Aaron's public class schedule
-2. **DC Bouldering Project** - Aaron's teaching schedule via ZoomShift
+Events go through a Stripe Checkout session and private sessions through a PaymentIntent, but neither writes the `Order`. That happens in `/api/webhooks/stripe`, idempotently on `stripeId`, so a student who closes the tab on the confirmation screen still gets their registration. All three webhook handlers (Stripe, Clerk, Resend) verify signatures before touching the database.
 
-**Architecture:**
+### Public reads are cached because the database bills by the minute
 
-- **All Environments**: Exclusively uses Browserless.io cloud browser service for consistent and reliable web scraping
-- **Required Token**: The `BROWSERLESS_API_TOKEN` environment variable must be set for the application to function
+Hot public reads are `unstable_cache`-wrapped in `*.queries.ts` and busted by tag on mutation. That's a cost decision as much as a speed one: the Neon compute never scales to zero while crawler and search-engine traffic keeps waking it up.
 
-**Setup:**
+### Newsletter, end to end
 
-1. Sign up for free Browserless account at https://account.browserless.io/signup/email?plan=free (1,000 pages/month free)
-2. Add `BROWSERLESS_API_TOKEN` to your environment variables (both local `.env` and Vercel)
-3. The crawler will fail with an error if this token is not present - this is by design to ensure consistent behavior
+A TipTap editor with debounced autosave, a phone-width live preview, and an insert-event dialog that pulls real event data into the draft. Delivery and scheduling run through Resend broadcasts. Every sent issue keeps a `sentHtml` snapshot, so the public archive renders exactly what landed in inboxes. Resend's webhook feeds opens, clicks, and bounces back into per-issue stats, deduped through a ledger table so a redelivered webhook can't double-count.
 
-**Testing the Crawlers:**
+There's also a private, admin-only training tracker at `/train`: a phone-first workout logger with nightly Garmin import on a second cron.
 
-**Test individual crawlers (no database update):**
+## Testing and CI
 
-1. **Bright Bear only:** `curl http://localhost:3000/api/test-sync/simple`
-   - Returns scraped Bright Bear classes as JSON without saving to database
+Playwright for E2E, with the config starting the dev server itself outside CI. GitHub Actions runs lint and `tsc --noEmit` on pushes and PRs to `main`, and a smoke test against the deployed Vercel preview rather than a build in the runner, then again against production after a deploy. Husky runs eslint, a type check, and prettier on staged files before a commit.
 
-2. **DCBP only:** `curl http://localhost:3000/api/test-sync/dcbp`
-   - Returns scraped DCBP classes from ZoomShift as JSON without saving to database
-   - Requires `ZOOMSHIFT_EMAIL` and `ZOOMSHIFT_PASSWORD` environment variables
-
-3. **Both crawlers:** `curl http://localhost:3000/api/test-sync/both`
-   - Tests both Bright Bear and DCBP crawlers simultaneously
-   - Returns results from both sources with success/failure status for each
-
-**Test full sync with database:**
-
-1. Start the development server: `npm run dev`
-2. Navigate to: `http://localhost:3000/api/test-sync`
-   - Or use curl: `curl http://localhost:3000/api/test-sync`
-   - This scrapes classes AND saves them to the database
-
-**Manual sync to database (POST):**
-
-1. Start the development server: `npm run dev`
-2. Make a POST request: `curl -X POST http://localhost:3000/api/dev-sync`
-3. Check `http://localhost:3000` to see the updated events
-
-**Test browser connection (Browserless):**
-
-1. Start the development server: `npm run dev`
-2. Navigate to: `http://localhost:3000/api/test-sync/playwright-debug`
-   - Tests whether Browserless connection is working correctly
-   - Will fail if `BROWSERLESS_API_TOKEN` is not set (this is intentional)
-
-**Automated Sync:**
-
-- A Vercel cron job runs daily at 8:00 AM UTC to sync events from **both sources** automatically
-- Configured in `vercel.json` at path `/api/cron/sync-events` with 120s timeout for both crawlers
-- To test the cron endpoint locally:
-  ```bash
-  curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/sync-events
-  ```
-  Note: Replace `YOUR_CRON_SECRET` with the value from your `.env` file
-
-**Vercel Pro Optimization:**
-
-- Function timeout set to 180 seconds for combined sync operations (includes retries)
-- Crawlers optimized for Vercel Pro limits (300s max duration)
-- **Rate limit protection**: 3 retries with exponential backoff (5s, 10s, 20s delays)
-- **Sequential execution**: Cron jobs run crawlers one at a time to avoid concurrent connection limits
-- **Fallback handling**: If one crawler fails, the other continues independently
-- Browserless.io ensures consistent browser environment across all deployments
-
-## <a name="tech-stack">Tech Stack</a>
-
-- **Next.js** ([docs](https://nextjs.org/)) (_TypeScript_)
-- **HeroUI** ([docs](https://www.heroui.com/))
-- **React Hook Form** ([docs](https://react-hook-form.com/))
-- **Vercel Postgres** ([docs](https://vercel.com/docs/databases/postgres))
-- **Vercel Blob Storage** ([docs](https://vercel.com/docs/storage))
-
-  **_Third-Party APIs_**
-
-- **Clerk** ([docs](https://docs.clerk.dev/))
-- **Stripe** ([docs](https://stripe.com/docs))
-- **Mailchimp Marketing API** ([docs](https://mailchimp.com/developer/marketing/))
-
-## <a name="features">Features</a>
-
-1. **Newsletter:** Stay up-to-date with upcoming events by signing up for the newsletter.
-2. **Authentication:** Role-Based Access Control (RBAC) powered by Clerk.
-3. **Events Management:** Admins can create, read, update, and delete events. End users can view events.
-4. **Search & Filter:** Users can search and filter events.
-5. **Checkout and Payment:** Secure payments powered by Stripe.
-
-## <a name="postgres">Postgres Database</a>
-
-You can use Prisma Studio to view and manage your Vercel Postgres database schema and data. The Prisma CLI reads `.env` by default, so load your `.env.local` explicitly:
+## Running it locally
 
 ```bash
-dotenv -e .env.local -- npx prisma studio
+cp .env.example .env.local   # then fill it in
+npm install
+# the Prisma CLI reads .env, not .env.local:
+grep '^POSTGRES_' .env.local > .env
+npx prisma migrate deploy
+npm run dev
 ```
 
-Opens Prisma Studio using your `.env.local` configuration.
+<details>
+<summary>Setup notes</summary>
 
-> **Tip**: Ensure `.env.local` has the correct `DATABASE_URL` for the database you want to connect to.
+`.env.example` lists the variables the code reads, grouped by feature. Postgres, Clerk, and Stripe are the minimum to boot; everything else switches off one feature at a time.
 
-## <a name="analytics">Analytics & Tracking</a>
+Two gotchas. The app reads `.env.local`, but the Prisma CLI only reads `.env`, so the Postgres URLs need to be in `.env` before `migrate deploy`, and Studio wants `npx dotenv-cli -e .env.local -- npx prisma studio`. And a fresh database has no categories, so create one from `/admin` before your first event, after giving your Clerk user the `admin` role.
 
-This application includes comprehensive analytics and user behavior tracking powered by **Vercel Analytics** (free tier).
+Other scripts: `npm run check` (lint + types), `npm run validate` (check + build), `npm run test:e2e`.
 
-### **🔍 Viewing Analytics Data**
+</details>
 
-**Vercel Dashboard:**
+## Contact
 
-1. Go to [vercel.com/dashboard](https://vercel.com/dashboard)
-2. Select your project
-3. Click **"Analytics"** in the left sidebar
-4. View real-time data including:
-   - Page views and unique visitors
-   - Top pages and referrers
-   - Geographic data
-   - Custom events (see tracking details below)
-
-**Analytics Tab Features:**
-
-- **Overview**: Traffic summary, page views, unique visitors
-- **Pages**: Most visited pages, bounce rates
-- **Referrers**: Traffic sources (direct, social, search, etc.)
-- **Events**: Custom click tracking and conversions
-- **Audiences**: User behavior patterns
-
-### **📊 What We Track**
-
-**Comprehensive click tracking across all interactive elements:**
-
-#### **Navigation & User Flow**
-
-- Logo clicks (home navigation)
-- Desktop/mobile navigation menu interactions
-- User dropdown toggles and admin link clicks
-- Authentication actions (sign in/out from various sources)
-- Hamburger menu open/close (mobile)
-
-#### **Event Interactions**
-
-- Event signup button clicks with full event context:
-  - Event ID, title, category
-  - Free vs paid events
-  - External vs internal registration
-  - Source (mobile vs desktop card)
-- Admin event management (edit/delete clicks)
-
-#### **Search & Discovery**
-
-- Search queries and terms
-- Category filter selections
-- Pagination (next/previous page navigation)
-- Calendar subscription interactions (Google Calendar, iCal)
-
-#### **Private Sessions (Key Conversions)**
-
-- Session count adjustments (increment/decrement/presets)
-- Session type selections
-- Purchase button clicks
-- "Sign in to purchase" conversions
-
-#### **Social & External Links**
-
-- Social media clicks (YouTube, Spotify, Instagram)
-- Footer social link interactions
-- Theme changes (light/dark/system)
-
-### **🛠 Analytics Utilities**
-
-**Created utility functions for enhanced tracking:**
-
-**`/app/_lib/analytics.ts`** - Helper functions for:
-
-- Conversion tracking with values
-- E-commerce events
-- Form completion tracking
-- Error tracking
-- Page engagement metrics
-
-**Custom Hooks Created:**
-
-**`/app/_hooks/usePageTracking.ts`** - Automatic page analytics:
-
-- Page view tracking
-- Time on page measurement
-- Scroll depth tracking
-- Session duration
-
-**`/app/_hooks/useFormAnalytics.ts`** - Form behavior tracking:
-
-- Form start/completion/abandonment
-- Field interaction tracking
-- Validation error tracking
-- Form completion time
-
-**`/app/_hooks/useABTest.ts`** - Simple A/B testing:
-
-- Variant assignment based on user ID
-- Conversion tracking per variant
-- Weighted distribution support
-
-**`/app/_components/ErrorBoundary.tsx`** - Error tracking:
-
-- JavaScript error capture
-- React error boundary tracking
-- User-friendly error display
-
-### **📈 Key Events to Monitor**
-
-**High-Value Conversions:**
-
-- `event_signup` - Event registrations
-- `private_session_booking` - Private session purchases
-- `calendar_subscription` - Calendar integrations
-- `newsletter_signup` - Email subscriptions
-
-**User Engagement:**
-
-- `navigation` - Site navigation patterns
-- `search` - Content discovery behavior
-- `filtering` - Event filtering usage
-- `social_media` - External link engagement
-
-**Technical Insights:**
-
-- `page_view` / `page_exit` - Traffic flow
-- `error` - Application issues
-- `form_completion` - Form performance
-
-### **🔧 Implementation Notes**
-
-- All tracking uses Vercel's free Analytics tier
-- No personal data is collected (GDPR friendly)
-- Click tracking includes contextual metadata
-- Error tracking helps identify technical issues
-- A/B testing setup for future optimization
-- Analytics data helps optimize user experience and conversion funnels
-
-### **💡 Analytics Best Practices**
-
-1. **Monitor Weekly**: Check analytics weekly for trends
-2. **Focus on Conversions**: Track event signups and private session bookings
-3. **Optimize High-Traffic Pages**: Use page analytics to improve popular content
-4. **Monitor Errors**: Address technical issues quickly
-5. **Test Changes**: Use A/B testing hook for major UI changes
-
-## <a name="testing">Testing</a>
-
-This application uses [Playwright](https://playwright.dev/) for end-to-end testing.
-
-- **Run Tests Locally**:
-  To execute all tests from the terminal, use the following command:
-
-  ```bash
-  npx playwright test
-  ```
-
-  > **Note**: The development server must be running prior to executing this command.
-
-- **CI Smoke Tests**:
-  GitHub Actions run a focused smoke test on every push to `dev` and on PRs to `main`. The smoke test verifies:
-  - The landing page loads without server errors (no 500s)
-  - The page title is correct
-  - At least one event is displayed
-
-  This lightweight test runs in ~15-25 seconds and catches critical runtime errors before they reach production. A separate workflow runs the same smoke test after production deployments to verify the live site.
-
-- **Full Test Suite**:
-  Additional tests for header navigation, footer, and other components are available locally but not run in CI to keep deployment times fast.
-
-- **IDE Recommendation**:
-  Regardless of your preferred IDE, it is recommended to leverage the [Playwright Test extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright). This extension provides a comprehensive set of tools for efficiently running and monitoring tests.
-
-## <a name="contact">Contact</a>
-
-- **Instagram:** [@aaroncurtisyoga](https://www.instagram.com/aaroncurtisyoga/)
-- **Email:** aaroncurtisyoga@gmail.com
+Instagram [@aaroncurtisyoga](https://www.instagram.com/aaroncurtisyoga/) · aaroncurtisyoga@gmail.com
