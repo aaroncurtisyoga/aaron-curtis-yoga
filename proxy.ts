@@ -6,25 +6,14 @@ const isAuthenticatedRoute = createRouteMatcher([
   "/admin/(.*)",
   "/profile",
   "/settings",
-  "/train",
-  "/train/(.*)",
 ]);
 
-// /train is the owner's personal training tracker — admin-gated like /admin.
-const isAdminRoute = createRouteMatcher([
-  "/admin",
-  "/admin/(.*)",
-  "/train",
-  "/train/(.*)",
-]);
-
-const isPublicRoute = createRouteMatcher(["/"]);
+const isAdminRoute = createRouteMatcher(["/admin", "/admin/(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const authObject = await auth();
 
-  const needsAuth =
-    (isAuthenticatedRoute(req) || isAdminRoute(req)) && !isPublicRoute(req);
+  const needsAuth = isAuthenticatedRoute(req) || isAdminRoute(req);
 
   // Not signed in on any protected route → send to sign-in and come back after.
   // This must run before the admin-role check, otherwise a signed-out visitor

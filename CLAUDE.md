@@ -1,6 +1,6 @@
-# acy-next, Aaron Curtis Yoga
+# aaroncurtisyoga.com, Aaron Curtis Yoga
 
-Fullstack yoga instructor website. Event management, class registration, private session booking, automated external event syncing, Google Calendar integration, Stripe payments. Also hosts a private, admin-only training tracker at `/train`.
+Fullstack yoga instructor website. Event management, class registration, private session booking, automated external event syncing, Google Calendar integration, Stripe payments.
 
 ## Stack
 
@@ -14,8 +14,7 @@ Fullstack yoga instructor website. Event management, class registration, private
 - **Resend** for newsletter (signups + broadcasts, managed from `/admin/newsletter`)
 - **Playwright** + Browserless.io for web scraping (event sync)
 - **Vercel Blob** for file uploads
-- **garmin-connect** + **recharts** for the training tracker
-- Deploy: **Vercel** with two daily crons
+- Deploy: **Vercel** with one daily cron
 
 ## Commands
 
@@ -43,7 +42,7 @@ Migrations: use `npx prisma migrate diff` + `npx prisma migrate deploy`, never `
 
 - Route protection via `proxy.ts` (not `middleware.ts`) using Clerk's `clerkMiddleware`
 - `/account`, `/profile`, `/settings` need a signed-in user
-- `/admin` + `/admin/*` and `/train` + `/train/*` additionally require `sessionClaims.metadata.role === "admin"`
+- `/admin` + `/admin/*` additionally require `sessionClaims.metadata.role === "admin"`
 
 ### All dates are America/New_York
 
@@ -51,7 +50,6 @@ Migrations: use `npx prisma migrate diff` + `npx prisma migrate deploy`, never `
 - Event form dates go through `components/ui/date-time-picker.tsx`: a `react-day-picker` calendar with `date-fns` formatting. There is no timezone library
 - Crawler-parsed dates are re-interpreted as ET by helpers in `app/_lib/utils/`
 - Event datetimes are stored as UTC DateTime in Postgres, displayed in ET
-- Training tables use `@db.Date`, which Prisma encodes as UTC midnight. Use `etToday()` / `dateFromYmd()` / `ymdFromDate()` from `app/_lib/utils/training-date.ts` for those, and format day labels with `timeZone: "UTC"` or they shift a day
 
 ### shadcn/ui (migrated off HeroUI)
 
@@ -59,7 +57,7 @@ Migrations: use `npx prisma migrate diff` + `npx prisma migrate deploy`, never `
 - Two-blue system in `app/globals.css`: deep royal anchor `#0842a0` (`--primary`/`--ring`) for brand, print/apparel, headings, and text and links on white; bright screen accent `#1a73e8` (`--color-cta`, exposed as `bg-cta`/`text-cta`) for primary CTAs, hovers, and highlights only. Use the `accent` Button variant for conversion CTAs; most buttons stay the deep `default`. `--color-sky` #6ba3f5 is the light accent tint for text on dark (navy) surfaces. Keep bright `#1a73e8` off physical and print output
 - Two more tokens in the same `@theme inline` block: `--color-navy` #131826 (ink and dark surfaces) and `--color-band` #eef1fa (pale section band), exposed as `bg-navy` / `bg-band`
 - Fonts loaded in `app/layout.tsx` via `next/font/google` and mapped in `tailwind.config.js`: Barlow to `font-sans`, Merriweather to `font-serif`, Anton to `font-display`
-- The public site is pinned light. `app/providers.tsx` sets `forcedTheme="light"`, so `dark:` variants on public components are dead code. `/train` gets its dark look from hardcoded classes in its own layout
+- The public site is pinned light. `app/providers.tsx` sets `forcedTheme="light"`, so `dark:` variants on public components are dead code
 
 ### Newsletter (Resend)
 
@@ -90,17 +88,6 @@ Migrations: use `npx prisma migrate diff` + `npx prisma migrate deploy`, never `
 - Database User ID stored back in Clerk `publicMetadata.userId`
 - Verified via Svix
 
-### Training Tracker (`/train`)
-
-Private, admin-gated, single-user. None of the training models carry a `userId` on purpose: every row belongs to the owner.
-
-- Three data sources. An authored Hyrox plan in `app/_lib/data/hyrox-plan.json` seeded as `PlannedSession` rows with `source: AUTHORED`; CrossFit DC workouts from `app/_lib/services/pushpress-wod.ts`; and manual entry
-- **PushPress is a public API, not scraping.** `pushpress-wod.ts` GETs `trainapi.pushpress.com/workout/workoutOfDay/v1` with a hardcoded tenant id, unauthenticated, 6s timeout. No Playwright involved
-- **Garmin auth stores no password.** Run `npx tsx scripts/garmin-login.ts` once locally; it does the OAuth exchange and writes `{ oauth1, oauth2 }` (about a year of validity) to the gitignored `.garmin-tokens.json`. `GARMIN_TOKENS` holds that JSON verbatim for Vercel. `loadTokens()` reads the env var first and falls back to the file
-- `syncGarminActivities()` runs from the nightly cron `/api/cron/sync-garmin` and from a manual refresh button. It upserts `GarminActivity` by `garminId` and auto-creates linked RUN sessions
-- **Seeds self-heal.** `ensureMovementLibrary()` and `ensureHyroxPlan()` run lazily on first `/train` visit, so every environment repairs itself instead of needing a seed command. Re-seeding the plan means deleting the AUTHORED rows first
-- **Deliberate convention exception**: `training.actions.ts` uses no `unstable_cache` and has no `*.queries.ts` counterpart. The traffic is one private user, and stale reads would fight the last-used-weight pre-fill. All three `/train` pages are `export const dynamic = "force-dynamic"`
-
 ## Conventions (follow these when extending)
 
 - **Admin auth**: server actions call `requireAdmin()` from `app/_lib/auth.ts`; API route handlers call `assertAdminRequest()` (cron routes call `assertCronRequest()`) from `app/_lib/api-auth.ts`. Both standardize on `sessionClaims.metadata.role` to match `proxy.ts`. Don't re-inline `currentUser()` role checks.
@@ -110,7 +97,6 @@ Private, admin-gated, single-user. None of the training models carry a `userId` 
 - **Hooks**: cross-feature hooks live in `app/_hooks`; feature-local hooks colocate with their feature (e.g. `app/admin/events/_components/hooks`).
 - **New sync source**: add a `SOURCE_TYPES` member (`app/_lib/constants`), a crawler in `crawlers/`, a `*-sync-service.ts` (clone an existing one), then wire it into `event-sync-service.ts`, the sync-status route, and the `admin/sync` dashboard.
 - **New admin CRUD resource**: `app/admin/categories` is the reference pattern for a simple single-resource CRUD (page + `_components` + `*.actions.ts` + Zod schema in `schema.ts` + a nav entry in `adminNavLinks`).
-- **New movement in the tracker**: add a seed to `DEFAULT_MOVEMENTS` in `app/_lib/constants/training.ts`. Names must match the Hyrox plan wording, since planned-versus-actual matching is by name.
 
 ## Project Structure
 
@@ -131,11 +117,9 @@ app/
 │   ├── users/                 # User management
 │   ├── categories/            # Category management
 │   └── sync/                  # Sync status dashboard
-├── train/                     # Admin-only training tracker (page, trends/, log/[id]/)
 ├── api/
 │   ├── webhooks/{clerk,stripe,resend} # Webhook handlers
 │   ├── cron/sync-events/       # Daily cron (8 AM UTC, 180s)
-│   ├── cron/sync-garmin/       # Daily cron (2 AM UTC, 60s)
 │   ├── admin/sync/             # Manual sync endpoints
 │   ├── create-payment-intent/  # Stripe
 │   └── upload-blob/, upload-image/
@@ -143,10 +127,9 @@ app/
 │   ├── actions/               # Server actions (*.actions.ts) + cached reads (*.queries.ts)
 │   ├── auth.ts / api-auth.ts  # requireAdmin() + assertAdminRequest()/assertCronRequest()
 │   ├── crawlers/              # Bright Bear + DCBP scrapers
-│   ├── data/                  # hyrox-plan.json (authored training plan)
-│   ├── services/              # Sync orchestration, DB ops, Garmin, PushPress WOD
+│   ├── services/              # Sync orchestration, DB ops
 │   ├── types/                 # TypeScript types
-│   ├── utils/                 # formatDateTime, serialize, training-date, query builders
+│   ├── utils/                 # formatDateTime, serialize, query builders
 │   ├── prisma.ts              # Prisma singleton
 │   ├── google-calendar.ts     # Google Calendar service account API
 │   └── schema.ts              # Zod form schemas
@@ -156,7 +139,7 @@ app/
 └── globals.css
 e2e/                           # Playwright specs, global.setup.ts, @clerk/testing auth
 prisma/                        # schema.prisma + migrations
-scripts/                       # import-subscribers, garmin-login, recolor-app-icons, version.sh
+scripts/                       # import-subscribers, recolor-app-icons, version.sh
 ```
 
 ## Database Schema
@@ -200,17 +183,13 @@ Key constraint: `@@unique([sourceType, sourceId])` on Event prevents duplicate s
 | `app/_lib/crawlers/`                             | Web scrapers for Bright Bear + DCBP                           |
 | `app/_lib/services/event-sync-service.ts`        | Orchestrates sync pipeline                                    |
 | `app/_lib/services/event-database-operations.ts` | Event upsert/deactivate + Calendar reconciliation             |
-| `app/_lib/services/garmin-sync.ts`               | Garmin activity + wellness import                             |
-| `app/_lib/services/pushpress-wod.ts`             | CrossFit DC workout-of-the-day fetch                          |
 | `app/_lib/utils/index.ts`                        | formatDateTime (ET), handleError, URL query helpers           |
 | `app/_lib/utils/serialize.ts`                    | Prisma to plain object serializer                             |
-| `app/_lib/utils/training-date.ts`                | `@db.Date` helpers, etToday/dateFromYmd/ymdFromDate           |
 | `app/_lib/constants/index.ts`                    | SOURCE_TYPES, adminNavLinks, table column defs                |
 | `app/_lib/google-calendar.ts`                    | Google Calendar API (service account)                         |
 | `app/_lib/schema.ts`                             | Zod validation schemas for forms                              |
 | `app/admin/events/_components/EventForm/`        | Event creation/edit form                                      |
 | `app/(root)/private-sessions/`                   | Multi-step private session booking wizard                     |
-| `scripts/garmin-login.ts`                        | One-time Garmin OAuth token mint                              |
 | `vercel.json`                                    | Cron schedules + function timeouts                            |
 
 ## Env Vars
@@ -225,9 +204,8 @@ Key constraint: `@@unique([sourceType, sourceId])` on Event prevents duplicate s
 - **Scraping**: `BROWSERLESS_API_TOKEN` (required in all envs), `ZOOMSHIFT_EMAIL`, `ZOOMSHIFT_PASSWORD`
 - **Email**: `RESEND_API_KEY`, `RESEND_SEGMENT_ID`, `RESEND_FROM_EMAIL`, `RESEND_WEBHOOK_SECRET`
 - **Storage**: `BLOB_READ_WRITE_TOKEN`
-- **Cron**: `CRON_SECRET`, gating both scheduled jobs
+- **Cron**: `CRON_SECRET`, gating the scheduled job
 - **App**: `NEXT_PUBLIC_SERVER_URL` (Stripe return URLs and account links)
-- **Training**: `GARMIN_TOKENS`
 - **Testing**: `NEXT_PUBLIC_APP_URL` (Playwright base URL, distinct from `NEXT_PUBLIC_SERVER_URL`), `CLERK_PUBLISHABLE_KEY` (unprefixed, gates `@clerk/testing`), four `E2E_CLERK_*` credentials
 
 Known naming trap: the Clerk webhook secret is read as `CLERK_WEBHOOK_SECRET` and the Stripe one as `STRIPE_WEBHOOK_SIGNING_SECRET`, but older env files use `WEBHOOK_SECRET` and `STRIPE_WEBHOOK_SECRET`, and the Clerk route's own error string still says `WEBHOOK_SECRET`. If a webhook silently fails, check the name first.

@@ -54,8 +54,6 @@ Hot public reads are `unstable_cache`-wrapped in `*.queries.ts` and busted by ta
 
 A TipTap editor with debounced autosave, a phone-width live preview, and an insert-event dialog that pulls real event data into the draft. Delivery and scheduling run through Resend broadcasts. Every sent issue keeps a `sentHtml` snapshot, so the public archive renders exactly what landed in inboxes. Resend's webhook feeds opens, clicks, and bounces back into per-issue stats, deduped through a ledger table so a redelivered webhook can't double-count.
 
-There's also a private, admin-only training tracker at `/train`: a phone-first workout logger with nightly Garmin import on a second cron.
-
 ## Testing and CI
 
 Playwright for E2E, with the config starting the dev server itself outside CI. GitHub Actions runs lint and `tsc --noEmit` on pushes and PRs to `main`, and a smoke test against the deployed Vercel preview rather than a build in the runner, then again against production after a deploy. Husky runs eslint, a type check, and prettier on staged files before a commit.
