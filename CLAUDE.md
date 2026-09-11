@@ -145,9 +145,7 @@ scripts/                       # import-subscribers, recolor-app-icons, version.
 
 ## Database Schema
 
-15 models in `prisma/schema.prisma`.
-
-Site (9):
+9 models in `prisma/schema.prisma`.
 
 - **Event**: title, dates, price, isFree, isFeatured, isActive, category, location, maxAttendees, googleEventId. Two separate external flags: `isHostedExternally` (advertised but not sold here) and `isExternal` (came from a crawler), plus sourceType/sourceId
 - **User**: clerkId (unique), email, firstName, lastName, photo
@@ -159,16 +157,7 @@ Site (9):
 - **NewsletterEmailEvent**: dedup ledger for Resend webhook events; one row per (newsletter, emailId, type, link)
 - **Book**: reserved for a future reading-list feature; not wired to anything yet
 
-Training tracker (6, single-user so no `userId` on any of them):
-
-- **Movement**: canonical movement library; name (unique), category, unitType, defaultUnit
-- **PlannedSession**: a day's prescription; world (HYROX/CROSSFIT), source (AUTHORED/PUSHPRESS/MANUAL), `blocks` Json, unique sourceId
-- **LoggedSession**: one thing actually done; date, activityType, rpe, felt, durationMin, score
-- **LoggedMovement**: per-movement sets within a logged session
-- **GarminActivity**: imported activity, upserted by `garminId`, optionally linked to a LoggedSession
-- **DailyWellness**: daily readiness metrics from Garmin
-
-Enums (8): `OrderType`, `NewsletterStatus`, `MovementCategory`, `UnitType`, `WeightUnit`, `TrainingWorld`, `PlannedSource`, `ActivityType`.
+Enums (2): `OrderType`, `NewsletterStatus`.
 
 Key constraint: `@@unique([sourceType, sourceId])` on Event prevents duplicate synced events.
 
