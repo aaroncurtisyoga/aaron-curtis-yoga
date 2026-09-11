@@ -43,6 +43,7 @@ Migrations: use `npx prisma migrate diff` + `npx prisma migrate deploy`, never `
 - Route protection via `proxy.ts` (not `middleware.ts`) using Clerk's `clerkMiddleware`
 - `/account`, `/profile`, `/settings` need a signed-in user
 - `/admin` + `/admin/*` additionally require `sessionClaims.metadata.role === "admin"`
+- `authorizedParties` in `proxy.ts` is an exact-match allowlist of this site's own origins (`www` and the apex, plus localhost and Vercel preview origins outside production). Anything serving this Clerk instance from a new host must be added there, or it 401s on every authenticated request. `train.` is left out on purpose: it's a separate app (the training tracker) that mints its own sessions
 
 ### All dates are America/New_York
 
